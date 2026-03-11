@@ -10,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-const RESOURCES = [
+const EMERGENCY_RESOURCES = [
   {
     title: '211 Helpline',
     description: 'Free, confidential service connecting people with local resources',
@@ -29,14 +29,21 @@ const RESOURCES = [
     phone: '1-800-231-6946',
     icon: 'home',
   },
+  {
+    title: 'SNAP Hotline',
+    description: 'Food assistance program information',
+    phone: '1-800-221-5689',
+    icon: 'restaurant',
+  },
 ];
 
 const TIPS = [
-  'Contact your local Department of Social Services for emergency housing assistance',
-  'Churches and faith-based organizations often provide temporary housing help',
-  'Many cities have 2-1-1 services that can connect you with local resources',
-  "Check if you qualify for Section 8 housing vouchers through your local housing authority",
-  'Salvation Army and Catholic Charities often offer emergency housing assistance',
+  'Contact your local Department of Social Services for emergency assistance',
+  'Churches and faith-based organizations often provide free meals and food pantries',
+  'Many cities have 2-1-1 services that connect you with local resources',
+  "Check if you qualify for Section 8 housing vouchers",
+  'Food banks typically don\'t require proof of income',
+  'SNAP benefits can be applied for online in most states',
 ];
 
 export default function InfoScreen() {
@@ -54,13 +61,13 @@ export default function InfoScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Housing Resources</Text>
-          <Text style={styles.subtitle}>Helpful information and emergency contacts</Text>
+          <Text style={styles.title}>Resources & Info</Text>
+          <Text style={styles.subtitle}>Emergency contacts and helpful tips</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Emergency Hotlines</Text>
-          {RESOURCES.map((resource, index) => (
+          {EMERGENCY_RESOURCES.map((resource, index) => (
             <View key={index} style={styles.resourceCard}>
               <View style={styles.resourceIcon}>
                 <Ionicons name={resource.icon as any} size={24} color="#3B82F6" />
@@ -81,7 +88,7 @@ export default function InfoScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tips for Finding Housing</Text>
+          <Text style={styles.sectionTitle}>Tips for Finding Help</Text>
           {TIPS.map((tip, index) => (
             <View key={index} style={styles.tipCard}>
               <View style={styles.tipNumber}>
@@ -96,10 +103,10 @@ export default function InfoScreen() {
           <Text style={styles.sectionTitle}>About This App</Text>
           <View style={styles.aboutCard}>
             <Text style={styles.aboutText}>
-              Housing Finder uses AI-powered search to help locate free and low-cost housing resources in your area. We search through databases of shelters, Section 8 housing, community programs, and more to provide you with relevant options.
+              Resource Finder uses AI-powered search to help locate free housing and food resources in your area. We search through databases of shelters, food pantries, Section 8 housing, community programs, and more.
             </Text>
             <Text style={styles.aboutNote}>
-              Note: While we strive to provide accurate information, please verify details directly with each organization as availability and requirements may change.
+              Note: Always verify details directly with each organization as availability and requirements may change.
             </Text>
           </View>
         </View>
@@ -107,7 +114,72 @@ export default function InfoScreen() {
         <View style={styles.disclaimerCard}>
           <Ionicons name="alert-circle" size={24} color="#F59E0B" />
           <Text style={styles.disclaimerText}>
-            This app provides information only and does not guarantee housing availability. Always contact resources directly to confirm current availability and eligibility requirements.
+            This app provides information only and does not guarantee resource availability. Always contact resources directly to confirm.
+          </Text>
+        </View>
+
+        <View style={styles.legalSection}>
+          <Text style={styles.legalTitle}>Legal Information</Text>
+          
+          <View style={styles.legalCard}>
+            <Ionicons name="shield-checkmark" size={20} color="#3B82F6" />
+            <View style={styles.legalContent}>
+              <Text style={styles.legalHeading}>Copyright Notice</Text>
+              <Text style={styles.legalText}>
+                Copyright 2025 Chad Alan Austin. All Rights Reserved.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.legalCard}>
+            <Ionicons name="document-text" size={20} color="#8B5CF6" />
+            <View style={styles.legalContent}>
+              <Text style={styles.legalHeading}>Intellectual Property</Text>
+              <Text style={styles.legalText}>
+                This application, including all code, design, algorithms, and content, is the intellectual property of Chad Alan Austin. No reproduction, modification, or commercial use without written permission.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.legalCard}>
+            <Ionicons name="information-circle" size={20} color="#10B981" />
+            <View style={styles.legalContent}>
+              <Text style={styles.legalHeading}>Disclosures</Text>
+              <Text style={styles.legalText}>
+                {"\u2022"} Information provided for informational purposes only{"\n"}
+                {"\u2022"} Some content is AI-generated and should be verified{"\n"}
+                {"\u2022"} Listing does not constitute endorsement{"\n"}
+                {"\u2022"} Not legal, financial, or professional advice{"\n"}
+                {"\u2022"} Resource availability subject to change
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.legalCard}>
+            <Ionicons name="lock-closed" size={20} color="#EC4899" />
+            <View style={styles.legalContent}>
+              <Text style={styles.legalHeading}>Privacy</Text>
+              <Text style={styles.legalText}>
+                We collect minimal data necessary to provide services. Location data is used only for resource searches and is not stored permanently.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.legalCard}>
+            <Ionicons name="hand-left" size={20} color="#F59E0B" />
+            <View style={styles.legalContent}>
+              <Text style={styles.legalHeading}>Limitation of Liability</Text>
+              <Text style={styles.legalText}>
+                Chad Alan Austin shall not be liable for any direct, indirect, incidental, or consequential damages arising from use of this application.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.copyrightFooter}>
+          <Text style={styles.copyrightText}>
+            2025 Chad Alan Austin{"\n"}
+            All Rights Reserved
           </Text>
         </View>
       </ScrollView>
@@ -255,11 +327,57 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: '#713F12',
+    marginBottom: 28,
   },
   disclaimerText: {
     flex: 1,
     fontSize: 13,
     color: '#FCD34D',
     lineHeight: 20,
+  },
+  legalSection: {
+    marginBottom: 20,
+  },
+  legalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 16,
+  },
+  legalCard: {
+    flexDirection: 'row',
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    gap: 12,
+  },
+  legalContent: {
+    flex: 1,
+  },
+  legalHeading: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 6,
+  },
+  legalText: {
+    fontSize: 13,
+    color: '#94A3B8',
+    lineHeight: 20,
+  },
+  copyrightFooter: {
+    alignItems: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  copyrightText: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

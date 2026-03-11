@@ -15,10 +15,11 @@ import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-interface HousingResource {
+interface Resource {
   id: string;
   name: string;
   category: string;
+  resource_type?: string;
   description: string;
   address?: string;
   city: string;
@@ -33,7 +34,7 @@ interface HousingResource {
   source?: string;
 }
 
-const getCategoryInfo = (category: string) => {
+const getHousingCategoryInfo = (category: string) => {
   const categories: Record<string, { color: string; icon: string; name: string }> = {
     shelter: { color: '#EF4444', icon: 'home', name: 'Emergency Shelter' },
     section8: { color: '#8B5CF6', icon: 'business', name: 'Section 8 / HUD' },
@@ -45,15 +46,30 @@ const getCategoryInfo = (category: string) => {
   return categories[category] || { color: '#64748B', icon: 'help-circle', name: 'Other' };
 };
 
+const getFoodCategoryInfo = (category: string) => {
+  const categories: Record<string, { color: string; icon: string; name: string }> = {
+    food_pantry: { color: '#10B981', icon: 'basket', name: 'Food Pantry' },
+    soup_kitchen: { color: '#F59E0B', icon: 'restaurant', name: 'Free Meals' },
+    food_bank: { color: '#8B5CF6', icon: 'cube', name: 'Food Bank' },
+    church_meals: { color: '#EC4899', icon: 'people', name: 'Church Meals' },
+    snap_wic: { color: '#3B82F6', icon: 'card', name: 'SNAP/WIC' },
+    free_groceries: { color: '#14B8A6', icon: 'cart', name: 'Free Groceries' },
+    coupons_deals: { color: '#EF4444', icon: 'pricetag', name: 'Coupons & Deals' },
+    student_senior: { color: '#6366F1', icon: 'school', name: 'Student/Senior' },
+  };
+  return categories[category] || { color: '#64748B', icon: 'help-circle', name: 'Other' };
+};
+
 export default function ResourceDetailScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isSaved, setIsSaved] = useState(false);
 
-  const resource: HousingResource = params.resourceData
+  const resource: Resource = params.resourceData
     ? JSON.parse(params.resourceData as string)
     : null;
+  const resourceType = params.resourceType as string || 'housing';
 
   if (!resource) {
     return (
@@ -63,7 +79,11 @@ export default function ResourceDetailScreen() {
     );
   }
 
-  const categoryInfo = getCategoryInfo(resource.category);
+  const categoryInfo = resourceType === 'food' 
+    ? getFoodCategoryInfo(resource.category)
+    : getHousingCategoryInfo(resource.category);
+
+  const themeColor = resourceType === 'food' ? '#10B981' : '#3B82F6';
 
   const handleCall = () => {
     if (resource.phone) {
@@ -124,14 +144,14 @@ export default function ResourceDetailScreen() {
               <Text style={styles.actionButtonText}>Website</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={[styles.actionButton, styles.directionsButton]} onPress={handleGetDirections}>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: themeColor }]} onPress={handleGetDirections}>
             <Ionicons name="navigate" size={20} color="#fff" />
             <Text style={styles.actionButtonText}>Directions</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          style={[styles.saveButton, isSaved && styles.savedButton]}
+          style={[styles.saveButton, isSaved && { backgroundColor: themeColor, borderColor: themeColor }]}
           onPress={handleSave}
           disabled={isSaved}
         >
@@ -141,7 +161,7 @@ export default function ResourceDetailScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="location" size={20} color="#3B82F6" />
+            <Ionicons name="location" size={20} color={themeColor} />
             <Text style={styles.sectionTitle}>Location</Text>
           </View>
           <Text style={styles.sectionContent}>
@@ -152,11 +172,21 @@ export default function ResourceDetailScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="information-circle" size={20} color="#3B82F6" />
+            <Ionicons name="information-circle" size={20} color={themeColor} />
             <Text style={styles.sectionTitle}>Description</Text>
           </View>
           <Text style={styles.sectionContent}>{resource.description}</Text>
         </View>
+
+        {resource.hours && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="time" size={20} color="#F59E0B" />
+              <Text style={styles.sectionTitle}>Hours</Text>
+            </View>
+            <Text style={styles.sectionContent}>{resource.hours}</Text>
+          </View>
+        )}
 
         {resource.phone && (
           <View style={styles.section}>
@@ -182,16 +212,6 @@ export default function ResourceDetailScreen() {
           </View>
         )}
 
-        {resource.hours && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="time" size={20} color="#F59E0B" />
-              <Text style={styles.sectionTitle}>Hours</Text>
-            </View>
-            <Text style={styles.sectionContent}>{resource.hours}</Text>
-          </View>
-        )}
-
         {resource.eligibility && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -206,7 +226,7 @@ export default function ResourceDetailScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="list" size={20} color="#EC4899" />
-              <Text style={styles.sectionTitle}>Services Offered</Text>
+              <Text style={styles.sectionTitle}>{resourceType === 'food' ? 'What\'s Available' : 'Services Offered'}</Text>
             </View>
             <View style={styles.servicesList}>
               {resource.services.map((service, index) => (
@@ -235,6 +255,10 @@ export default function ResourceDetailScreen() {
             <Text style={styles.sourceText}>Source: {resource.source}</Text>
           </View>
         )}
+
+        <View style={styles.copyrightFooter}>
+          <Text style={styles.copyrightText}>2025 Chad Alan Austin. All Rights Reserved.</Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -295,9 +319,6 @@ const styles = StyleSheet.create({
   websiteButton: {
     backgroundColor: '#8B5CF6',
   },
-  directionsButton: {
-    backgroundColor: '#3B82F6',
-  },
   actionButtonText: {
     color: '#fff',
     fontSize: 14,
@@ -314,10 +335,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#3B82F6',
     marginBottom: 24,
-  },
-  savedButton: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
   },
   saveButtonText: {
     color: '#fff',
@@ -364,6 +381,7 @@ const styles = StyleSheet.create({
   serviceText: {
     fontSize: 14,
     color: '#E2E8F0',
+    flex: 1,
   },
   sourceCard: {
     flexDirection: 'row',
@@ -378,5 +396,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     flex: 1,
+  },
+  copyrightFooter: {
+    alignItems: 'center',
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  copyrightText: {
+    fontSize: 12,
+    color: '#64748B',
   },
 });

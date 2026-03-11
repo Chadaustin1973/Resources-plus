@@ -13,10 +13,11 @@ import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-interface HousingResource {
+interface Resource {
   id: string;
   name: string;
   category: string;
+  resource_type?: string;
   description: string;
   address?: string;
   city: string;
@@ -31,7 +32,7 @@ interface HousingResource {
   source?: string;
 }
 
-const getCategoryInfo = (category: string) => {
+const getHousingCategoryInfo = (category: string) => {
   const categories: Record<string, { color: string; icon: string; name: string }> = {
     shelter: { color: '#EF4444', icon: 'home', name: 'Emergency Shelter' },
     section8: { color: '#8B5CF6', icon: 'business', name: 'Section 8 / HUD' },
@@ -43,17 +44,38 @@ const getCategoryInfo = (category: string) => {
   return categories[category] || { color: '#64748B', icon: 'help-circle', name: 'Other' };
 };
 
+const getFoodCategoryInfo = (category: string) => {
+  const categories: Record<string, { color: string; icon: string; name: string }> = {
+    food_pantry: { color: '#10B981', icon: 'basket', name: 'Food Pantry' },
+    soup_kitchen: { color: '#F59E0B', icon: 'restaurant', name: 'Free Meals' },
+    food_bank: { color: '#8B5CF6', icon: 'cube', name: 'Food Bank' },
+    church_meals: { color: '#EC4899', icon: 'people', name: 'Church Meals' },
+    snap_wic: { color: '#3B82F6', icon: 'card', name: 'SNAP/WIC' },
+    free_groceries: { color: '#14B8A6', icon: 'cart', name: 'Free Groceries' },
+    coupons_deals: { color: '#EF4444', icon: 'pricetag', name: 'Coupons & Deals' },
+    student_senior: { color: '#6366F1', icon: 'school', name: 'Student/Senior' },
+  };
+  return categories[category] || { color: '#64748B', icon: 'help-circle', name: 'Other' };
+};
+
 export default function SearchResultsScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   const resultsData = params.results ? JSON.parse(params.results as string) : null;
-  const resources: HousingResource[] = resultsData?.resources || [];
+  const resources: Resource[] = resultsData?.resources || [];
   const searchSummary = resultsData?.search_summary || '';
   const searchLocation = params.searchLocation as string || '';
+  const resourceType = params.resourceType as string || 'housing';
 
-  const handleSaveResource = async (resource: HousingResource) => {
+  const getCategoryInfo = (category: string) => {
+    return resourceType === 'food' 
+      ? getFoodCategoryInfo(category) 
+      : getHousingCategoryInfo(category);
+  };
+
+  const handleSaveResource = async (resource: Resource) => {
     if (savedIds.has(resource.id)) {
       Alert.alert('Already Saved', 'This resource is already in your saved list.');
       return;
@@ -69,20 +91,23 @@ export default function SearchResultsScreen() {
     }
   };
 
-  const handleResourcePress = (resource: HousingResource) => {
+  const handleResourcePress = (resource: Resource) => {
     router.push({
       pathname: '/resource/[id]',
       params: {
         id: resource.id,
         resourceData: JSON.stringify(resource),
+        resourceType: resourceType,
       },
     });
   };
 
+  const themeColor = resourceType === 'food' ? '#10B981' : '#3B82F6';
+
   return (
     <View style={styles.container}>
-      <View style={styles.summaryBar}>
-        <Ionicons name="location" size={18} color="#3B82F6" />
+      <View style={[styles.summaryBar, { borderBottomColor: themeColor }]}>
+        <Ionicons name="location" size={18} color={themeColor} />
         <Text style={styles.summaryText}>{searchSummary}</Text>
       </View>
 
@@ -91,7 +116,7 @@ export default function SearchResultsScreen() {
           <Ionicons name="search-outline" size={64} color="#64748B" />
           <Text style={styles.emptyTitle}>No Results Found</Text>
           <Text style={styles.emptyText}>
-            We couldn't find housing resources for this location. Try a different search.
+            We couldn't find {resourceType} resources for this location. Try a different search.
           </Text>
         </View>
       ) : (
@@ -123,7 +148,7 @@ export default function SearchResultsScreen() {
                     <Ionicons
                       name={isSaved ? 'bookmark' : 'bookmark-outline'}
                       size={24}
-                      color={isSaved ? '#3B82F6' : '#64748B'}
+                      color={isSaved ? themeColor : '#64748B'}
                     />
                   </TouchableOpacity>
                 </View>
@@ -131,8 +156,8 @@ export default function SearchResultsScreen() {
                 <Text style={styles.resourceName}>{resource.name}</Text>
 
                 <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={14} color="#3B82F6" />
-                  <Text style={styles.locationText}>
+                  <Ionicons name="location-outline" size={14} color={themeColor} />
+                  <Text style={[styles.locationText, { color: themeColor }]}>
                     {resource.address ? `${resource.address}, ` : ''}
                     {resource.city}, {resource.state} {resource.zip_code || ''}
                   </Text>
@@ -141,6 +166,13 @@ export default function SearchResultsScreen() {
                 <Text style={styles.resourceDescription} numberOfLines={3}>
                   {resource.description}
                 </Text>
+
+                {resource.hours && (
+                  <View style={styles.hoursRow}>
+                    <Ionicons name="time-outline" size={14} color="#F59E0B" />
+                    <Text style={styles.hoursText}>{resource.hours}</Text>
+                  </View>
+                )}
 
                 {resource.phone && (
                   <View style={styles.contactRow}>
@@ -163,8 +195,8 @@ export default function SearchResultsScreen() {
                 )}
 
                 <View style={styles.viewMoreRow}>
-                  <Text style={styles.viewMoreText}>View Details</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#3B82F6" />
+                  <Text style={[styles.viewMoreText, { color: themeColor }]}>View Details</Text>
+                  <Ionicons name="chevron-forward" size={16} color={themeColor} />
                 </View>
               </TouchableOpacity>
             );
@@ -186,8 +218,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
     padding: 14,
     gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomWidth: 2,
   },
   summaryText: {
     flex: 1,
@@ -263,13 +294,22 @@ const styles = StyleSheet.create({
   locationText: {
     flex: 1,
     fontSize: 13,
-    color: '#3B82F6',
   },
   resourceDescription: {
     fontSize: 14,
     color: '#94A3B8',
     lineHeight: 20,
     marginBottom: 12,
+  },
+  hoursRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  hoursText: {
+    fontSize: 13,
+    color: '#F59E0B',
   },
   contactRow: {
     flexDirection: 'row',
@@ -313,7 +353,6 @@ const styles = StyleSheet.create({
   },
   viewMoreText: {
     fontSize: 14,
-    color: '#3B82F6',
     fontWeight: '500',
   },
 });
