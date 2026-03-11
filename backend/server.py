@@ -34,10 +34,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Define Models
-class HousingResource(BaseModel):
+class Resource(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
-    category: str  # shelter, section8, free_stay, budget_motel, transitional, social_service
+    category: str
+    resource_type: str = "housing"  # housing or food
     description: str
     address: Optional[str] = None
     city: str
@@ -52,6 +53,9 @@ class HousingResource(BaseModel):
     source: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Keep HousingResource as alias for backward compatibility
+HousingResource = Resource
+
 class SavedResource(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     resource_id: str
@@ -63,14 +67,15 @@ class SearchRequest(BaseModel):
     location: str  # City, State or Zip code
     categories: List[str] = []  # Empty means all categories
     specific_needs: Optional[str] = None
+    resource_type: str = "housing"  # housing or food
 
 class SearchResponse(BaseModel):
-    resources: List[HousingResource]
+    resources: List[Resource]
     search_summary: str
     total_found: int
 
 # Housing categories
-CATEGORIES = [
+HOUSING_CATEGORIES = [
     {"id": "shelter", "name": "Emergency Shelters", "icon": "home", "description": "Immediate temporary housing for those in crisis"},
     {"id": "section8", "name": "Section 8 / HUD", "icon": "building", "description": "Government housing vouchers and subsidized housing"},
     {"id": "free_stay", "name": "Free Temporary Stays", "icon": "heart", "description": "Churches, community programs, and charitable organizations"},
@@ -78,6 +83,21 @@ CATEGORIES = [
     {"id": "transitional", "name": "Transitional Housing", "icon": "trending-up", "description": "Longer-term housing with support services"},
     {"id": "social_service", "name": "Social Services", "icon": "users", "description": "Organizations that help find housing assistance"},
 ]
+
+# Food categories
+FOOD_CATEGORIES = [
+    {"id": "food_pantry", "name": "Food Pantries", "icon": "basket", "description": "Free groceries and food boxes to take home"},
+    {"id": "soup_kitchen", "name": "Soup Kitchens & Free Meals", "icon": "restaurant", "description": "Hot meals served on-site at no cost"},
+    {"id": "food_bank", "name": "Food Banks & Distribution", "icon": "cube", "description": "Large-scale food distribution centers"},
+    {"id": "church_meals", "name": "Church & Community Meals", "icon": "people", "description": "Free dinners and meals at churches and community centers"},
+    {"id": "snap_wic", "name": "SNAP & WIC Programs", "icon": "card", "description": "Government food assistance programs"},
+    {"id": "free_groceries", "name": "Free Grocery Programs", "icon": "cart", "description": "Mobile pantries, produce distributions, and food rescue"},
+    {"id": "coupons_deals", "name": "Coupons & Free Deals", "icon": "pricetag", "description": "Free food coupons, samples, and grocery store deals"},
+    {"id": "student_senior", "name": "Student & Senior Programs", "icon": "school", "description": "Free meals for students, seniors, and special populations"},
+]
+
+# Combined for backward compatibility
+CATEGORIES = HOUSING_CATEGORIES
 
 # AI Research function
 async def research_housing_resources(location: str, categories: List[str], specific_needs: Optional[str] = None) -> List[dict]:
