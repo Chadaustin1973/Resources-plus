@@ -370,24 +370,35 @@ async def get_legal_info():
     }
 
 @api_router.post("/search", response_model=SearchResponse)
-async def search_housing(request: SearchRequest):
-    """Search for housing resources using AI-powered research."""
-    logger.info(f"Searching for housing in: {request.location}")
+async def search_resources(request: SearchRequest):
+    """Search for housing or food resources using AI-powered research."""
+    resource_type = request.resource_type if hasattr(request, 'resource_type') else "housing"
+    logger.info(f"Searching for {resource_type} in: {request.location}")
     
-    # Perform AI research
-    raw_resources = await research_housing_resources(
-        location=request.location,
-        categories=request.categories,
-        specific_needs=request.specific_needs
-    )
+    # Perform AI research based on resource type
+    if resource_type == "food":
+        raw_resources = await research_food_resources(
+            location=request.location,
+            categories=request.categories,
+            specific_needs=request.specific_needs
+        )
+        category_list = FOOD_CATEGORIES
+    else:
+        raw_resources = await research_housing_resources(
+            location=request.location,
+            categories=request.categories,
+            specific_needs=request.specific_needs
+        )
+        category_list = HOUSING_CATEGORIES
     
-    # Convert to HousingResource objects and store in database
+    # Convert to Resource objects and store in database
     resources = []
     for r in raw_resources:
         try:
-            resource = HousingResource(
+            resource = Resource(
                 name=r.get("name", "Unknown Resource"),
-                category=r.get("category", "social_service"),
+                category=r.get("category", "social_service" if resource_type == "housing" else "food_pantry"),
+                resource_type=resource_type,
                 description=r.get("description", ""),
                 address=r.get("address"),
                 city=r.get("city", request.location.split(",")[0].strip()),
@@ -404,7 +415,8 @@ async def search_housing(request: SearchRequest):
             resources.append(resource)
             
             # Store in database for caching
-            await db.housing_resources.update_one(
+            collection_name = "food_resources" if resource_type == "food" else "housing_resources"
+            await db[collection_name].update_one(
                 {"name": resource.name, "city": resource.city},
                 {"$set": resource.dict()},
                 upsert=True
@@ -416,16 +428,19 @@ async def search_housing(request: SearchRequest):
     # Store search in history
     await db.search_history.insert_one({
         "location": request.location,
+        "resource_type": resource_type,
         "categories": request.categories,
         "specific_needs": request.specific_needs,
         "results_count": len(resources),
         "timestamp": datetime.utcnow()
     })
     
-    summary = f"Found {len(resources)} housing resources in {request.location}"
+    type_label = "food" if resource_type == "food" else "housing"
+    summary = f"Found {len(resources)} {type_label} resources in {request.location}"
     if request.categories:
-        cat_names = [c["name"] for c in CATEGORIES if c["id"] in request.categories]
-        summary += f" focusing on: {', '.join(cat_names)}"
+        cat_names = [c["name"] for c in category_list if c["id"] in request.categories]
+        if cat_names:
+            summary += f" focusing on: {', '.join(cat_names)}"
     
     return SearchResponse(
         resources=resources,
