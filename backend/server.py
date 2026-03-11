@@ -296,12 +296,78 @@ Return ONLY the JSON array, no other text."""
 # API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Housing Finder API", "version": "1.0"}
+    return {"message": "Resource Finder API", "version": "2.0", "copyright": "2025 Chad Alan Austin. All Rights Reserved."}
 
 @api_router.get("/categories")
 async def get_categories():
     """Get all housing categories."""
-    return {"categories": CATEGORIES}
+    return {"categories": HOUSING_CATEGORIES}
+
+@api_router.get("/categories/food")
+async def get_food_categories():
+    """Get all food categories."""
+    return {"categories": FOOD_CATEGORIES}
+
+@api_router.get("/categories/all")
+async def get_all_categories():
+    """Get all categories (housing and food)."""
+    return {
+        "housing": HOUSING_CATEGORIES,
+        "food": FOOD_CATEGORIES
+    }
+
+@api_router.get("/legal")
+async def get_legal_info():
+    """Get legal information, copyright, and disclosures."""
+    return {
+        "copyright": {
+            "owner": "Chad Alan Austin",
+            "year": "2025",
+            "statement": "Copyright 2025 Chad Alan Austin. All Rights Reserved.",
+            "all_rights_reserved": True
+        },
+        "intellectual_property": {
+            "notice": "This application, including all code, design, algorithms, and content, is the intellectual property of Chad Alan Austin.",
+            "protected_elements": [
+                "Application source code and architecture",
+                "User interface design and layout",
+                "AI-powered resource search algorithms",
+                "Database structures and schemas",
+                "Brand name and logos",
+                "Documentation and user guides"
+            ],
+            "restrictions": [
+                "No reproduction without written permission",
+                "No modification or derivative works",
+                "No commercial use without license",
+                "No reverse engineering",
+                "No data scraping or automated collection"
+            ]
+        },
+        "disclosures": {
+            "accuracy": "Resource information is provided for informational purposes only. While we strive for accuracy, we cannot guarantee that all information is current or complete. Always verify details directly with service providers.",
+            "no_endorsement": "Listing of any resource does not constitute endorsement. Users should evaluate resources independently.",
+            "availability": "Resource availability may change without notice. Contact providers directly to confirm current services.",
+            "not_legal_advice": "This application does not provide legal, financial, or professional advice. Consult appropriate professionals for such matters.",
+            "ai_generated": "Some resource information is generated using AI technology and should be independently verified.",
+            "privacy": "We collect minimal data necessary to provide services. Location data is used only for resource searches and is not stored permanently."
+        },
+        "terms_of_use": {
+            "acceptance": "By using this application, you agree to these terms and conditions.",
+            "permitted_use": "This application is intended for personal, non-commercial use to find free resources for those in need.",
+            "prohibited_activities": [
+                "Using the app for commercial purposes without authorization",
+                "Attempting to access systems or data without authorization",
+                "Interfering with the proper functioning of the application",
+                "Misrepresenting your identity or affiliation",
+                "Using the app to harm or defraud others"
+            ],
+            "limitation_of_liability": "Chad Alan Austin shall not be liable for any direct, indirect, incidental, or consequential damages arising from use of this application."
+        },
+        "contact": {
+            "for_legal_inquiries": "For legal inquiries, licensing requests, or to report violations, please contact the application owner through official channels."
+        }
+    }
 
 @api_router.post("/search", response_model=SearchResponse)
 async def search_housing(request: SearchRequest):
