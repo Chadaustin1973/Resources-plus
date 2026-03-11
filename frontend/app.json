@@ -40,6 +40,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#000"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Find housing resources near your location"
+        }
       ]
     ],
     "experiments": {
