@@ -108,7 +108,7 @@ async def research_housing_resources(location: str, categories: List[str], speci
         logger.error("EMERGENT_LLM_KEY not found")
         return []
     
-    category_names = ", ".join([c["name"] for c in CATEGORIES if not categories or c["id"] in categories]) or "all housing types"
+    category_names = ", ".join([c["name"] for c in HOUSING_CATEGORIES if not categories or c["id"] in categories]) or "all housing types"
     
     system_message = """You are a housing resource research assistant specializing in finding free and low-cost housing options for low-income individuals and families. You have extensive knowledge of:
 - Emergency shelters and homeless services
@@ -168,6 +168,111 @@ Return ONLY the JSON array, no other text."""
         
         # Parse the JSON response
         # Clean the response - remove markdown code blocks if present
+        cleaned_response = response.strip()
+        if cleaned_response.startswith("```json"):
+            cleaned_response = cleaned_response[7:]
+        if cleaned_response.startswith("```"):
+            cleaned_response = cleaned_response[3:]
+        if cleaned_response.endswith("```"):
+            cleaned_response = cleaned_response[:-3]
+        cleaned_response = cleaned_response.strip()
+        
+        resources = json.loads(cleaned_response)
+        return resources
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse AI response as JSON: {e}")
+        logger.error(f"Response was: {response[:500] if response else 'None'}")
+        return []
+    except Exception as e:
+        logger.error(f"Error in AI research: {e}")
+        return []
+
+# AI Research function for FOOD resources
+async def research_food_resources(location: str, categories: List[str], specific_needs: Optional[str] = None) -> List[dict]:
+    """Use AI to research and find food resources for the given location."""
+    
+    api_key = os.environ.get('EMERGENT_LLM_KEY')
+    if not api_key:
+        logger.error("EMERGENT_LLM_KEY not found")
+        return []
+    
+    category_names = ", ".join([c["name"] for c in FOOD_CATEGORIES if not categories or c["id"] in categories]) or "all food assistance types"
+    
+    system_message = """You are a food resource research assistant specializing in finding FREE food options for low-income individuals and families. You have extensive knowledge of:
+- Food pantries and food banks
+- Soup kitchens and community meal programs
+- Church free meal nights and community dinners
+- SNAP (food stamps) and WIC programs
+- Mobile food pantries and produce distributions
+- Senior meal programs (Meals on Wheels, senior centers)
+- School meal programs and summer feeding
+- Food rescue organizations
+- Free grocery store coupons and deals
+- Free food samples and trial offers
+- Community fridges and blessing boxes
+- Food distribution events
+
+Your job is to provide detailed, actionable information about FREE food resources. Focus on resources that have ZERO COST to the person. Include specific days/times when meals are served, eligibility requirements, and what food is available."""
+
+    user_prompt = f"""Research and find FREE food resources for someone in need in {location}. 
+
+Focus on these categories: {category_names}
+{f"Additional needs: {specific_needs}" if specific_needs else ""}
+
+Provide a comprehensive list of at least 8-12 food resources. PRIORITIZE:
+1. Food pantries where people can get free groceries
+2. Soup kitchens and places serving free hot meals
+3. Church free meal nights (specific days/times)
+4. Food bank distribution centers
+5. Community meal programs
+6. Mobile food pantries and pop-up distributions
+7. Free grocery coupons and deals at local stores
+8. SNAP/WIC enrollment assistance
+9. Senior and student meal programs
+10. Any free food samples, trials, or promotions
+
+For each resource, provide:
+1. Name of the organization/resource
+2. Category (food_pantry, soup_kitchen, food_bank, church_meals, snap_wic, free_groceries, coupons_deals, or student_senior)
+3. Detailed description including what food is available
+4. Full address if known
+5. Phone number if available
+6. Website if available
+7. Eligibility requirements (or "Open to all" if no restrictions)
+8. What's offered (as a list - types of food, meals, etc.)
+9. Days and hours of operation - BE SPECIFIC
+10. Important notes (bring ID? bags? appointment needed?)
+
+IMPORTANT: Return your response as a valid JSON array of objects. Each object should have these exact fields:
+- name (string)
+- category (string: one of food_pantry, soup_kitchen, food_bank, church_meals, snap_wic, free_groceries, coupons_deals, student_senior)
+- description (string)
+- address (string or null)
+- city (string)
+- state (string)
+- zip_code (string or null)
+- phone (string or null)
+- website (string or null)
+- eligibility (string or null)
+- services (array of strings - what food/meals are available)
+- hours (string or null - BE SPECIFIC about days and times)
+- notes (string or null)
+- source (string describing where this info might be found)
+
+Return ONLY the JSON array, no other text."""
+
+    try:
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"food-search-{uuid.uuid4()}",
+            system_message=system_message
+        ).with_model("openai", "gpt-5.2")
+        
+        user_message = UserMessage(text=user_prompt)
+        response = await chat.send_message(user_message)
+        
+        # Parse the JSON response
         cleaned_response = response.strip()
         if cleaned_response.startswith("```json"):
             cleaned_response = cleaned_response[7:]
