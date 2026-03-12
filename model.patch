@@ -1,0 +1,52 @@
+diff --git a/frontend/app/(tabs)/_layout.tsx b/frontend/app/(tabs)/_layout.tsx
+index 610ae60..587563d 100644
+--- a/frontend/app/(tabs)/_layout.tsx
++++ b/frontend/app/(tabs)/_layout.tsx
+@@ -1,17 +1,24 @@
+ import React from 'react';
+ import { Tabs } from 'expo-router';
+ import { Ionicons } from '@expo/vector-icons';
+-import { Platform, StyleSheet } from 'react-native';
++import { Platform, StyleSheet, View } from 'react-native';
++import { useSafeAreaInsets } from 'react-native-safe-area-context';
+ 
+ export default function TabLayout() {
++  const insets = useSafeAreaInsets();
++
+   return (
+     <Tabs
+       screenOptions={{
+         headerShown: false,
+-        tabBarStyle: styles.tabBar,
++        tabBarStyle: [
++          styles.tabBar,
++          { paddingTop: insets.top > 0 ? insets.top : 10 }
++        ],
+         tabBarActiveTintColor: '#3B82F6',
+         tabBarInactiveTintColor: '#64748B',
+         tabBarLabelStyle: styles.tabBarLabel,
++        tabBarPosition: 'top',
+       }}
+     >
+       <Tabs.Screen
+@@ -57,11 +64,15 @@ export default function TabLayout() {
+ const styles = StyleSheet.create({
+   tabBar: {
+     backgroundColor: '#1E293B',
+-    borderTopColor: '#334155',
+-    borderTopWidth: 1,
+-    height: Platform.OS === 'ios' ? 85 : 60,
+-    paddingBottom: Platform.OS === 'ios' ? 25 : 8,
+-    paddingTop: 8,
++    borderBottomColor: '#334155',
++    borderBottomWidth: 1,
++    borderTopWidth: 0,
++    height: 'auto',
++    paddingBottom: 10,
++    position: 'absolute',
++    top: 0,
++    left: 0,
++    right: 0,
+   },
+   tabBarLabel: {
+     fontSize: 12,
