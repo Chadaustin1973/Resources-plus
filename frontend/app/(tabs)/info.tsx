@@ -54,7 +54,7 @@ export default function InfoScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
