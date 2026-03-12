@@ -1,81 +1,123 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Tabs, usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function TabLayout() {
+const TAB_ITEMS = [
+  { name: 'index', title: 'Housing', icon: 'home', route: '/' },
+  { name: 'food', title: 'Food', icon: 'restaurant', route: '/food' },
+  { name: 'saved', title: 'Saved', icon: 'bookmark', route: '/saved' },
+  { name: 'info', title: 'Info', icon: 'information-circle', route: '/info' },
+];
+
+function TopTabBar() {
+  const pathname = usePathname();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const isActive = (route: string, name: string) => {
+    if (route === '/' && (pathname === '/' || pathname === '/index')) return true;
+    if (route !== '/' && pathname.includes(name)) return true;
+    return false;
+  };
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: [
-          styles.tabBar,
-          { paddingTop: insets.top > 0 ? insets.top : 10 }
-        ],
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#64748B',
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarPosition: 'top',
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Housing',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="food"
-        options={{
-          title: 'Food',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="restaurant" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="saved"
-        options={{
-          title: 'Saved',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bookmark" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="info"
-        options={{
-          title: 'Info',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="information-circle" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+    <View style={[styles.topTabBar, { paddingTop: insets.top > 0 ? insets.top + 8 : 12 }]}>
+      <Text style={styles.appTitle}>Resource Finder</Text>
+      <View style={styles.tabsContainer}>
+        {TAB_ITEMS.map((tab) => {
+          const active = isActive(tab.route, tab.name);
+          return (
+            <TouchableOpacity
+              key={tab.name}
+              style={[styles.tabItem, active && styles.tabItemActive]}
+              onPress={() => router.push(tab.route as any)}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={20}
+                color={active ? '#fff' : '#94A3B8'}
+              />
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                {tab.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+export default function TabLayout() {
+  return (
+    <View style={styles.container}>
+      <TopTabBar />
+      <View style={styles.content}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
+          }}
+        >
+          <Tabs.Screen name="index" />
+          <Tabs.Screen name="food" />
+          <Tabs.Screen name="saved" />
+          <Tabs.Screen name="info" />
+        </Tabs>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#1E293B',
-    borderBottomColor: '#334155',
-    borderBottomWidth: 1,
-    borderTopWidth: 0,
-    height: 'auto',
-    paddingBottom: 10,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  container: {
+    flex: 1,
+    backgroundColor: '#0F172A',
   },
-  tabBarLabel: {
+  topTabBar: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+  },
+  appTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  tabItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: '#0F172A',
+    gap: 6,
+  },
+  tabItemActive: {
+    backgroundColor: '#3B82F6',
+  },
+  tabLabel: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#94A3B8',
+  },
+  tabLabelActive: {
+    color: '#fff',
+  },
+  content: {
+    flex: 1,
   },
 });
