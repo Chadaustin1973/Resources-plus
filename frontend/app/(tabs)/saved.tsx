@@ -106,7 +106,7 @@ export default function SavedScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Saved Resources</Text>
         <Text style={styles.subtitle}>
